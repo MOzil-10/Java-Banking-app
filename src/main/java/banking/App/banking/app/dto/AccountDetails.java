@@ -10,4 +10,5 @@ public class AccountDetails {
     private Long id;
     private String accountHolderName;
     private double balance;
+    private String accountNumber;
 }

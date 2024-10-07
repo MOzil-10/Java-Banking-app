@@ -7,6 +7,7 @@ import banking.App.banking.app.repository.AccountRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,8 +22,10 @@ public class AccountServiceImplementation implements AccountService{
     @Override
     public AccountDetails createAccount(AccountDetails accountDetails) {
         Account account = AccountMapper.mapToAccount(accountDetails);
-        Account saveAccount = accountRepository.save(account);
-        return AccountMapper.mapToAccountDetails(saveAccount);
+        String accountNumber = generateAccountNumber();
+        account.setAccountNumber(accountNumber);
+        Account savedAccount = accountRepository.save(account);
+        return AccountMapper.mapToAccountDetails(savedAccount);
     }
 
     @Override
@@ -73,7 +76,14 @@ public class AccountServiceImplementation implements AccountService{
                 .findById(id).orElseThrow(() -> new RuntimeException("Account does not exists"));
 
         accountRepository.deleteById(id);
+    }
 
-
+    private String generateAccountNumber() {
+        Random random = new Random();
+        StringBuilder accountNumber = new StringBuilder();
+        for(int i = 0; i <= 12; i++) {
+            accountNumber.append(random.nextInt(10));
+        }
+        return accountNumber.toString();
     }
 }
