@@ -1,10 +1,13 @@
 package banking.App.banking.app.entity;
 
+import banking.App.banking.app.converter.AttributeEncryptor;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -15,10 +18,15 @@ import lombok.Setter;
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
-    @Column(name = "account_holder_name")
+    @Column(name = "account_holder_name", nullable = false)
     private String accountHolderName;
-    private double balance;
+
+    @Column(nullable = false)
+    private BigDecimal balance = BigDecimal.ZERO;
+
+    @Column(name = "account_number", unique = true, nullable = false)
+    @Convert(converter = AttributeEncryptor.class)
     private String accountNumber;
 }

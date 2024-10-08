@@ -1,67 +1,76 @@
 package banking.App.banking.app.controller;
 
 import banking.App.banking.app.dto.AccountDetails;
+import banking.App.banking.app.dto.TransactionRequest;
+import banking.App.banking.app.dto.CreateAccountRequest;
 import banking.App.banking.app.services.AccountService;
+import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
-@RequestMapping("/api/accounts")
+@RequestMapping("/api/account")
+@Validated
 public class AccountController {
 
     private final AccountService accountService;
+    private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
 
-    AccountController (AccountService accountService) {
+    public AccountController(AccountService accountService) {
         this.accountService = accountService;
     }
 
-    //Add account REST API
     @PostMapping
-    public ResponseEntity<AccountDetails> addAccount(@RequestBody AccountDetails accountDetails) {
-        return new ResponseEntity<>(accountService.createAccount(accountDetails), HttpStatus.CREATED);
+    public ResponseEntity<AccountDetails> addAccount(@Valid @RequestBody CreateAccountRequest createAccountRequest) {
+        logger.info("Received request to create account for holder: {}", createAccountRequest.getAccountHolderName());
+
+        try {
+            AccountDetails accountDetails = accountService.createAccount(createAccountRequest);
+            return new ResponseEntity<>(accountDetails, HttpStatus.CREATED);
+        } catch (Exception e) {
+            logger.error("Error creating account: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
-    //Get account by ID Rest API
     @GetMapping("/{id}")
-    public ResponseEntity<AccountDetails> getAccountById(@PathVariable long id) {
+    public ResponseEntity<AccountDetails> getAccountById(@PathVariable Long id) {
+        logger.info("Fetching account details for ID: {}", id);
         AccountDetails accountDetails = accountService.getAccountById(id);
         return ResponseEntity.ok(accountDetails);
     }
 
-    //deposit Rest API
     @PutMapping("/{id}/deposit")
-    public ResponseEntity<AccountDetails> deposit(@PathVariable Long id, @RequestBody Map<String, Double> request) {
-
-        Double amount = request.get("amount");
-
-       AccountDetails accountDetails = accountService.deposit(id, amount);
-       return ResponseEntity.ok(accountDetails);
+    public ResponseEntity<AccountDetails> deposit(@PathVariable Long id, @Valid @RequestBody TransactionRequest transactionRequest) {
+        logger.info("Depositing amount: {} to account ID: {}", transactionRequest.getAmount(), id);
+        AccountDetails accountDetails = accountService.deposit(id, transactionRequest.getAmount());
+        return ResponseEntity.ok(accountDetails);
     }
 
-    //withdraw Rest Api
-    @PutMapping("{id}/withdraw")
-    public ResponseEntity<AccountDetails> withdraw(@PathVariable  Long id,@RequestBody Map<String,Double> request) {
-       Double amount = request.get("amount");
-
-       AccountDetails accountDetails = accountService.withdraw(id, amount);
-       return ResponseEntity.ok(accountDetails);
+    @PutMapping("/{id}/withdraw")
+    public ResponseEntity<AccountDetails> withdraw(@PathVariable Long id, @Valid @RequestBody TransactionRequest transactionRequest) {
+        logger.info("Withdrawing amount: {} from account ID: {}", transactionRequest.getAmount(), id);
+        AccountDetails accountDetails = accountService.withdraw(id, transactionRequest.getAmount());
+        return ResponseEntity.ok(accountDetails);
     }
 
-    //Get all accounts Rest API
     @GetMapping
     public ResponseEntity<List<AccountDetails>> getAllAccounts() {
-       List <AccountDetails> accounts = accountService.getAllAccounts();
-       return ResponseEntity.ok(accounts);
+        logger.info("Fetching all accounts");
+        List<AccountDetails> accounts = accountService.getAllAccounts();
+        return ResponseEntity.ok(accounts);
     }
 
-    //Delete Rest API
-    @DeleteMapping("{id}")
-    public ResponseEntity<String> deleteAccount(@PathVariable Long id) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAccount(@PathVariable Long id) {
+        logger.info("Deleting account with ID: {}", id);
         accountService.deleteAccount(id);
-        return ResponseEntity.ok("Account Deleted Successfully");
+        return ResponseEntity.noContent().build();
     }
 }
