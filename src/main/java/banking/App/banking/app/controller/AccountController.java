@@ -26,6 +26,12 @@ public class AccountController {
         this.accountService = accountService;
     }
 
+    /**
+     * Creates a new account based on the provided account details.
+     *
+     * @param createAccountRequest the request object containing account creation details
+     * @return ResponseEntity containing the created AccountDetails and HTTP status code
+     */
     @PostMapping
     public ResponseEntity<AccountDetails> addAccount(@Valid @RequestBody CreateAccountRequest createAccountRequest) {
         logger.info("Received request to create account for holder: {}", createAccountRequest.getAccountHolderName());
@@ -39,6 +45,12 @@ public class AccountController {
         }
     }
 
+    /**
+     * Retrieves account details by account ID.
+     *
+     * @param id the ID of the account to retrieve
+     * @return ResponseEntity containing the AccountDetails and HTTP status code
+     */
     @GetMapping("/{id}")
     public ResponseEntity<AccountDetails> getAccountById(@PathVariable Long id) {
         logger.info("Fetching account details for ID: {}", id);
@@ -46,6 +58,13 @@ public class AccountController {
         return ResponseEntity.ok(accountDetails);
     }
 
+    /**
+     * Deposits an amount into the specified account.
+     *
+     * @param id                 the ID of the account to deposit into
+     * @param transactionRequest the request object containing deposit details
+     * @return ResponseEntity containing the updated AccountDetails and HTTP status code
+     */
     @PutMapping("/{id}/deposit")
     public ResponseEntity<AccountDetails> deposit(@PathVariable Long id, @Valid @RequestBody TransactionRequest transactionRequest) {
         logger.info("Depositing amount: {} to account ID: {}", transactionRequest.getAmount(), id);
@@ -53,6 +72,13 @@ public class AccountController {
         return ResponseEntity.ok(accountDetails);
     }
 
+    /**
+     * Withdraws an amount from the specified account.
+     *
+     * @param id                 the ID of the account to withdraw from
+     * @param transactionRequest the request object containing withdrawal details
+     * @return ResponseEntity containing the updated AccountDetails and HTTP status code
+     */
     @PutMapping("/{id}/withdraw")
     public ResponseEntity<AccountDetails> withdraw(@PathVariable Long id, @Valid @RequestBody TransactionRequest transactionRequest) {
         logger.info("Withdrawing amount: {} from account ID: {}", transactionRequest.getAmount(), id);
@@ -60,6 +86,11 @@ public class AccountController {
         return ResponseEntity.ok(accountDetails);
     }
 
+    /**
+     * Retrieves all accounts.
+     *
+     * @return ResponseEntity containing a list of AccountDetails and HTTP status code
+     */
     @GetMapping
     public ResponseEntity<List<AccountDetails>> getAllAccounts() {
         logger.info("Fetching all accounts");
@@ -67,6 +98,12 @@ public class AccountController {
         return ResponseEntity.ok(accounts);
     }
 
+    /**
+     * Deletes the specified account.
+     *
+     * @param id the ID of the account to delete
+     * @return ResponseEntity with no content and HTTP status code
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAccount(@PathVariable Long id) {
         logger.info("Deleting account with ID: {}", id);

@@ -28,6 +28,12 @@ public class AccountServiceImplementation implements AccountService {
         this.accountRepository = accountRepository;
     }
 
+    /**
+     * Creates a new account based on the provided account creation request.
+     *
+     * @param createAccountRequest the request object containing account creation details
+     * @return AccountDetails containing the details of the newly created account
+     */
     @Override
     @Transactional
     public AccountDetails createAccount(CreateAccountRequest createAccountRequest) {
@@ -41,6 +47,13 @@ public class AccountServiceImplementation implements AccountService {
         return AccountMapper.mapToAccountDetails(savedAccount);
     }
 
+    /**
+     * Retrieves account details by account ID.
+     *
+     * @param id the ID of the account to retrieve
+     * @return AccountDetails containing the account details
+     * @throws AccountNotFoundException if the account with the given ID does not exist
+     */
     @Override
     public AccountDetails getAccountById(Long id) {
         Account account = accountRepository
@@ -50,6 +63,15 @@ public class AccountServiceImplementation implements AccountService {
         return AccountMapper.mapToAccountDetails(account);
     }
 
+    /**
+     * Deposits an amount into the specified account.
+     *
+     * @param id     the ID of the account to deposit into
+     * @param amount the amount to deposit
+     * @return AccountDetails containing the updated account details
+     * @throws IllegalArgumentException if the deposit amount is non-positive
+     * @throws AccountNotFoundException if the account with the given ID does not exist
+     */
     @Override
     @Transactional
     public AccountDetails deposit(Long id, BigDecimal amount) {
@@ -67,7 +89,15 @@ public class AccountServiceImplementation implements AccountService {
         return AccountMapper.mapToAccountDetails(savedAccount);
     }
 
-
+    /**
+     * Withdraws an amount from the specified account.
+     *
+     * @param id     the ID of the account to withdraw from
+     * @param amount the amount to withdraw
+     * @return AccountDetails containing the updated account details
+     * @throws IllegalArgumentException if the withdrawal amount is non-positive or exceeds the account balance
+     * @throws AccountNotFoundException if the account with the given ID does not exist
+     */
     @Override
     @Transactional
     public AccountDetails withdraw(Long id, BigDecimal amount) {
@@ -89,6 +119,11 @@ public class AccountServiceImplementation implements AccountService {
         return AccountMapper.mapToAccountDetails(savedAccount);
     }
 
+    /**
+     * Retrieves all accounts in the system.
+     *
+     * @return a list of AccountDetails containing details of all accounts
+     */
     @Override
     public List<AccountDetails> getAllAccounts() {
         List<Account> accounts = accountRepository.findAll();
@@ -97,6 +132,12 @@ public class AccountServiceImplementation implements AccountService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Deletes the specified account.
+     *
+     * @param id the ID of the account to delete
+     * @throws AccountNotFoundException if the account with the given ID does not exist
+     */
     @Override
     @Transactional
     public void deleteAccount(Long id) {
@@ -110,6 +151,7 @@ public class AccountServiceImplementation implements AccountService {
      * Generates a unique account number.
      *
      * @return a unique 12-digit account number
+     * @throws DuplicateAccountNumberException if a unique account number cannot be generated after the maximum number of attempts
      */
     private String generateUniqueAccountNumber() {
         for (int attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
