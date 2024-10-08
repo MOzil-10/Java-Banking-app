@@ -4,9 +4,11 @@ import banking.App.banking.app.dto.AccountDetails;
 import banking.App.banking.app.dto.mapper.AccountMapper;
 import banking.App.banking.app.dto.CreateAccountRequest;
 import banking.App.banking.app.entity.Account;
+import banking.App.banking.app.entity.Transaction;
 import banking.App.banking.app.exception.AccountNotFoundException;
 import banking.App.banking.app.exception.DuplicateAccountNumberException;
 import banking.App.banking.app.repository.AccountRepository;
+import banking.App.banking.app.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,12 +22,14 @@ import java.util.stream.Collectors;
 public class AccountServiceImplementation implements AccountService {
 
     private final AccountRepository accountRepository;
+    private final TransactionRepository transactionRepository;
     private final SecureRandom secureRandom = new SecureRandom();
     private static final int ACCOUNT_NUMBER_LENGTH = 12;
     private static final int MAX_GENERATION_ATTEMPTS = 5;
 
-    public AccountServiceImplementation(AccountRepository accountRepository) {
+    public AccountServiceImplementation(AccountRepository accountRepository, TransactionRepository transactionRepository) {
         this.accountRepository = accountRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     /**
@@ -83,9 +87,17 @@ public class AccountServiceImplementation implements AccountService {
                 .findById(id)
                 .orElseThrow(() -> new AccountNotFoundException("Account with ID " + id + " does not exist"));
 
-        BigDecimal totalBalance = account.getBalance().add(amount); // Use amount directly
+        BigDecimal totalBalance = account.getBalance().add(amount);
         account.setBalance(totalBalance.setScale(2, RoundingMode.HALF_UP));
         Account savedAccount = accountRepository.save(account);
+
+        Transaction transaction = new Transaction();
+        transaction.setAccount(account);
+        transaction.setAmount(amount);
+        transaction.setTransactionType("DEPOSIT");
+
+        transactionRepository.save(transaction);
+
         return AccountMapper.mapToAccountDetails(savedAccount);
     }
 
@@ -113,9 +125,17 @@ public class AccountServiceImplementation implements AccountService {
             throw new IllegalArgumentException("Insufficient balance");
         }
 
-        BigDecimal totalBalance = account.getBalance().subtract(amount); // Use amount directly
+        BigDecimal totalBalance = account.getBalance().subtract(amount);
         account.setBalance(totalBalance.setScale(2, RoundingMode.HALF_UP));
         Account savedAccount = accountRepository.save(account);
+
+        Transaction transaction = new Transaction();
+        transaction.setAccount(account);
+        transaction.setAmount(amount);
+        transaction.setTransactionType("WITHDRAW");
+
+        transactionRepository.save(transaction);
+
         return AccountMapper.mapToAccountDetails(savedAccount);
     }
 

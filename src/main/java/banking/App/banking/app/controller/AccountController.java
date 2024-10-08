@@ -1,8 +1,11 @@
 package banking.App.banking.app.controller;
 
 import banking.App.banking.app.dto.AccountDetails;
+import banking.App.banking.app.dto.TransactionDetails;
 import banking.App.banking.app.dto.TransactionRequest;
 import banking.App.banking.app.dto.CreateAccountRequest;
+import banking.App.banking.app.entity.Transaction;
+import banking.App.banking.app.repository.TransactionRepository;
 import banking.App.banking.app.services.AccountService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -13,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/account")
@@ -20,10 +24,12 @@ import java.util.List;
 public class AccountController {
 
     private final AccountService accountService;
+    private final TransactionRepository transactionRepository;
     private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
 
-    public AccountController(AccountService accountService) {
+    public AccountController(AccountService accountService, TransactionRepository transactionRepository) {
         this.accountService = accountService;
+        this.transactionRepository = transactionRepository;
     }
 
     /**
@@ -84,6 +90,28 @@ public class AccountController {
         logger.info("Withdrawing amount: {} from account ID: {}", transactionRequest.getAmount(), id);
         AccountDetails accountDetails = accountService.withdraw(id, transactionRequest.getAmount());
         return ResponseEntity.ok(accountDetails);
+    }
+
+    /**
+     * Retrieves transaction history for a specified account ID.
+     *
+     * @param id the ID of the account for which to retrieve transaction history
+     * @return ResponseEntity containing a list of TransactionDetails and HTTP status code
+     */
+    @GetMapping("/{id}/transactions")
+    public ResponseEntity<List<TransactionDetails>> getTransactionHistory(@PathVariable Long id) {
+        logger.info("Fetching transaction history for account ID: {}", id);
+        List<Transaction> transactions = transactionRepository.findByAccountId(id);
+
+        List<TransactionDetails> transactionDetails = transactions.stream()
+                .map(transaction -> new TransactionDetails(
+                        transaction.getId(),
+                        transaction.getAmount(),
+                        transaction.getTransactionType(),
+                        transaction.getTimestamp()))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(transactionDetails);
     }
 
     /**
