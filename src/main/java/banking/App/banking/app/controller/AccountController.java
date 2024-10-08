@@ -5,6 +5,7 @@ import banking.App.banking.app.dto.TransactionDetails;
 import banking.App.banking.app.dto.TransactionRequest;
 import banking.App.banking.app.dto.CreateAccountRequest;
 import banking.App.banking.app.entity.Transaction;
+import banking.App.banking.app.exception.AccountNotFoundException;
 import banking.App.banking.app.repository.TransactionRepository;
 import banking.App.banking.app.services.AccountService;
 import jakarta.validation.Valid;
@@ -101,7 +102,12 @@ public class AccountController {
     @GetMapping("/{id}/transactions")
     public ResponseEntity<List<TransactionDetails>> getTransactionHistory(@PathVariable Long id) {
         logger.info("Fetching transaction history for account ID: {}", id);
+
         List<Transaction> transactions = transactionRepository.findByAccountId(id);
+
+        if (transactions.isEmpty()) {
+            throw new AccountNotFoundException("Account with ID " + id + " not found.");
+        }
 
         List<TransactionDetails> transactionDetails = transactions.stream()
                 .map(transaction -> new TransactionDetails(
